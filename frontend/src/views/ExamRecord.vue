@@ -28,7 +28,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态">
           <template #default="{ row }">
             <el-tag :type="row.status === 3 ? 'success' : row.status === 2 ? 'info' : 'warning'">
               {{ getStatusText(row.status) }}
