@@ -223,15 +223,6 @@ const handleSave = async () => {
     return
   }
   
-  if ((form.questionType === 1 || form.questionType === 2) && form.options) {
-    try {
-      JSON.parse(form.options)
-    } catch {
-      ElMessage.warning('选项格式不正确，请使用标准JSON数组格式')
-      return
-    }
-  }
-  
   saveLoading.value = true
   try {
     if (isEdit.value) {
