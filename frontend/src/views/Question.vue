@@ -26,7 +26,7 @@
           <el-button type="primary" @click="loadData">搜索</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="tableData" border>
+      <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="questionType" label="类型" width="100">
           <template #default="{ row }">
@@ -43,7 +43,7 @@
         <el-table-column prop="questionContent" label="题目内容" show-overflow-tooltip />
         <el-table-column prop="score" label="分值" width="80" />
         <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" link @click="handleDelete(row)">删除</el-button>
@@ -91,7 +91,7 @@
             v-model="form.options"
             type="textarea"
             :rows="4"
-            placeholder="JSON数组格式，如：[\"A选项\", \"B选项\"]"
+            placeholder='JSON数组格式，如：["A选项", "B选项"]'
           />
           <div style="font-size: 12px; color: #909399; margin-top: 5px;">
             提示：请使用标准JSON数组格式，例如 ["选项1", "选项2", "选项3"]
@@ -208,7 +208,6 @@ const handleSave = async () => {
     return
   }
   
-  // 验证选项JSON格式
   if ((form.questionType === 1 || form.questionType === 2) && form.options) {
     try {
       JSON.parse(form.options)

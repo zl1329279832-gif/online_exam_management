@@ -15,7 +15,7 @@
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="tableData" border>
+      <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="id" label="记录ID" width="100" />
         <el-table-column prop="examId" label="考试ID" width="100" />
         <el-table-column prop="userId" label="用户ID" width="100" />
@@ -35,7 +35,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleDetail(row)">详情</el-button>
           </template>
