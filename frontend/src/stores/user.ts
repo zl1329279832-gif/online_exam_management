@@ -12,6 +12,16 @@ interface UserInfo {
 export const useUserStore = defineStore('user', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
   const userInfo = ref<UserInfo | null>(null)
+  
+  // 从localStorage恢复userInfo
+  const savedUserInfo = localStorage.getItem('userInfo')
+  if (savedUserInfo) {
+    try {
+      userInfo.value = JSON.parse(savedUserInfo)
+    } catch {
+      localStorage.removeItem('userInfo')
+    }
+  }
 
   const setToken = (newToken: string) => {
     token.value = newToken
@@ -20,6 +30,7 @@ export const useUserStore = defineStore('user', () => {
 
   const setUserInfo = (info: UserInfo) => {
     userInfo.value = info
+    localStorage.setItem('userInfo', JSON.stringify(info))
   }
 
   const login = async (username: string, password: string) => {
@@ -33,6 +44,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     userInfo.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
   }
 
   return {

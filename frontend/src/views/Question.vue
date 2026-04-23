@@ -9,12 +9,12 @@
       </template>
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="题库">
-          <el-select v-model="searchForm.bankId" placeholder="请选择题库" clearable>
+          <el-select v-model="searchForm.bankId" placeholder="请选择题库" clearable style="width: 200px;">
             <el-option v-for="item in bankList" :key="item.id" :label="item.bankName" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="类型">
-          <el-select v-model="searchForm.questionType" placeholder="请选类型" clearable>
+          <el-select v-model="searchForm.questionType" placeholder="请选类型" clearable style="width: 150px;">
             <el-option label="单选题" :value="1" />
             <el-option label="多选题" :value="2" />
             <el-option label="判断题" :value="3" />
@@ -31,13 +31,13 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="questionType" label="类型" width="100">
           <template #default="{ row }">
-            {{ { 1: '单选', 2: '多选', 3: '判断', 4: '填空', 5: '简答' }[row.questionType] }}
+            {{ getQuestionTypeText(row.questionType) }}
           </template>
         </el-table-column>
         <el-table-column prop="difficulty" label="难度" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.difficulty === 1 ? 'success' : row.difficulty === 2 ? 'warning' : 'danger'">
-              {{ { 1: '简单', 2: '中等', 3: '困难' }[row.difficulty] }}
+            <el-tag :type="getDifficultyType(row.difficulty)">
+              {{ getDifficultyText(row.difficulty) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -98,7 +98,7 @@
             v-model="form.options"
             type="textarea"
             :rows="4"
-            placeholder="JSON数组格式，如：[\"A选项\", \"B选项\"]"
+            placeholder='JSON数组格式，如：["A选项", "B选项"]'
           />
           <div style="font-size: 12px; color: #909399; margin-top: 5px;">
             提示：请使用标准JSON数组格式，例如 ["选项1", "选项2", "选项3"]
@@ -128,8 +128,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import { formatDateTime } from '@/utils/format'
 
-const tableData = ref<any[]>([])
-const bankList = ref<any[]>([])
+const tableData = ref([])
+const bankList = ref([])
 const pageNum = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -138,13 +138,13 @@ const isEdit = ref(false)
 const saveLoading = ref(false)
 
 const searchForm = reactive({
-  bankId: null as number | null,
-  questionType: null as number | null
+  bankId: null,
+  questionType: null
 })
 
 const form = reactive({
-  id: null as number | null,
-  bankId: null as number | null,
+  id: null,
+  bankId: null,
   questionType: 1,
   difficulty: 1,
   questionContent: '',
@@ -154,17 +154,33 @@ const form = reactive({
   score: 5
 })
 
+const getQuestionTypeText = (type: number) => {
+  const map = { 1: '单选', 2: '多选', 3: '判断', 4: '填空', 5: '简答' }
+  return map[type as keyof typeof map] || ''
+}
+
+const getDifficultyText = (difficulty: number) => {
+  const map = { 1: '简单', 2: '中等', 3: '困难' }
+  return map[difficulty as keyof typeof map] || ''
+}
+
+const getDifficultyType = (difficulty: number) => {
+  const map = { 1: 'success', 2: 'warning', 3: 'danger' }
+  return map[difficulty as keyof typeof map] || 'info'
+}
+
 const loadBanks = async () => {
   try {
-    const res: any = await request.get('/questionBank/page', { params: { pageNum: 1, pageSize: 100 } })
+    const res = await request.get('/questionBank/page', { params: { pageNum: 1, pageSize: 100 } })
     bankList.value = res.data.records
-  } catch {
+  } catch (error) {
+    console.error('加载题库失败', error)
   }
 }
 
 const loadData = async () => {
   try {
-    const res: any = await request.get('/question/page', {
+    const res = await request.get('/question/page', {
       params: {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -174,7 +190,8 @@ const loadData = async () => {
     })
     tableData.value = res.data.records
     total.value = res.data.total
-  } catch {
+  } catch (error) {
+    console.error('加载题目失败', error)
   }
 }
 
@@ -233,7 +250,8 @@ const handleSave = async () => {
     ElMessage.success('保存成功')
     dialogVisible.value = false
     loadData()
-  } catch {
+  } catch (error) {
+    console.error('保存失败', error)
   } finally {
     saveLoading.value = false
   }
@@ -249,7 +267,8 @@ const handleDelete = async (row: any) => {
     await request.delete(`/question/${row.id}`)
     ElMessage.success('删除成功')
     loadData()
-  } catch {
+  } catch (error) {
+    console.error('删除失败', error)
   }
 }
 
