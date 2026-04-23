@@ -54,7 +54,7 @@ public class AuthService {
         userRoleWrapper.eq(SysUserRole::getUserId, user.getId());
         List<SysUserRole> userRoles = sysUserRoleMapper.selectList(userRoleWrapper);
 
-        List<String> roleCodes = List.of();
+        List<String> roleCodes = new java.util.ArrayList<>();
         if (!userRoles.isEmpty()) {
             List<Long> roleIds = userRoles.stream().map(SysUserRole::getRoleId).collect(Collectors.toList());
             List<SysRole> roles = sysRoleMapper.selectBatchIds(roleIds);

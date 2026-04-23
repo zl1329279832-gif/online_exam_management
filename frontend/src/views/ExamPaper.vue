@@ -62,14 +62,13 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="questionDialogVisible" title="试卷题目" width="900px">
+    <el-dialog v-model="questionDialogVisible" title="试卷题目" width="800px">
       <el-button type="primary" size="small" @click="showAddQuestionDialog" style="margin-bottom: 10px;">添加题目</el-button>
-      <el-table :data="paperQuestions" border style="width: 100%;">
+      <el-table :data="paperQuestions" border>
         <el-table-column prop="questionOrder" label="序号" width="80" />
         <el-table-column prop="questionId" label="题目ID" width="100" />
-        <el-table-column prop="questionContent" label="题目内容" min-width="200" show-overflow-tooltip />
         <el-table-column prop="questionScore" label="分值" width="100" />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="100">
           <template #default="{ row }">
             <el-button type="danger" size="small" link @click="handleRemoveQuestion(row)">移除</el-button>
           </template>
@@ -80,56 +79,21 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="addQuestionDialogVisible" title="添加题目" width="900px">
-      <el-form :model="questionSearchForm" inline>
-        <el-form-item label="题库">
-          <el-select v-model="questionSearchForm.bankId" placeholder="请选择题库" clearable style="width: 200px;">
-            <el-option v-for="item in bankList" :key="item.id" :label="item.bankName" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="questionSearchForm.questionType" placeholder="请选类型" clearable style="width: 150px;">
-            <el-option label="单选题" :value="1" />
-            <el-option label="多选题" :value="2" />
-            <el-option label="判断题" :value="3" />
-            <el-option label="填空题" :value="4" />
-            <el-option label="简答题" :value="5" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="loadQuestions">搜索</el-button>
-        </el-form-item>
-      </el-form>
-      <el-table :data="questionList" border style="width: 100%; margin-bottom: 20px; max-height: 300px; overflow-y: auto;" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="questionType" label="类型" width="100">
-          <template #default="{ row }">
-            {{ { 1: '单选', 2: '多选', 3: '判断', 4: '填空', 5: '简答' }[row.questionType] }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="difficulty" label="难度" width="80">
-          <template #default="{ row }">
-            <el-tag :type="row.difficulty === 1 ? 'success' : row.difficulty === 2 ? 'warning' : 'danger'">
-              {{ { 1: '简单', 2: '中等', 3: '困难' }[row.difficulty] }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="questionContent" label="题目内容" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="score" label="分值" width="80" />
-      </el-table>
-      <el-divider />
+    <el-dialog v-model="addQuestionDialogVisible" title="添加题目" width="600px">
       <el-form :model="questionForm" label-width="100px">
+        <el-form-item label="题目ID">
+          <el-input-number v-model="questionForm.questionId" :min="1" />
+        </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="questionForm.questionOrder" :min="1" style="width: 100%;" />
+          <el-input-number v-model="questionForm.questionOrder" :min="1" />
         </el-form-item>
         <el-form-item label="分值">
-          <el-input-number v-model="questionForm.questionScore" :min="0" :step="0.5" style="width: 100%;" />
+          <el-input-number v-model="questionForm.questionScore" :min="0" :step="0.5" />
         </el-form-item>
       </el-form>
-      <template #footer>
+      <template #footer">
         <el-button @click="addQuestionDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAddQuestion" :loading="addQuestionLoading">添加选中题目</el-button>
+        <el-button type="primary" @click="handleAddQuestion">添加</el-button>
       </template>
     </el-dialog>
   </div>
@@ -142,9 +106,6 @@ import request from '@/utils/request'
 import { formatDateTime } from '@/utils/format'
 
 const tableData = ref<any[]>([])
-const bankList = ref<any[]>([])
-const questionList = ref<any[]>([])
-const selectedQuestions = ref<any[]>([])
 const pageNum = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -153,7 +114,6 @@ const questionDialogVisible = ref(false)
 const addQuestionDialogVisible = ref(false)
 const isEdit = ref(false)
 const saveLoading = ref(false)
-const addQuestionLoading = ref(false)
 const currentPaperId = ref<number | null>(null)
 const paperQuestions = ref<any[]>([])
 
@@ -166,25 +126,12 @@ const form = reactive({
   duration: 60
 })
 
-const questionSearchForm = reactive({
-  bankId: null as number | null,
-  questionType: null as number | null
-})
-
 const questionForm = reactive({
   paperId: null as number | null,
   questionId: null as number | null,
   questionOrder: 1,
   questionScore: 5
 })
-
-const loadBanks = async () => {
-  try {
-    const res: any = await request.get('/questionBank/page', { params: { pageNum: 1, pageSize: 100 } })
-    bankList.value = res.data.records
-  } catch {
-  }
-}
 
 const loadData = async () => {
   try {
@@ -195,24 +142,6 @@ const loadData = async () => {
     total.value = res.data.total
   } catch {
   }
-}
-
-const loadQuestions = async () => {
-  try {
-    const res: any = await request.get('/question/page', {
-      params: {
-        pageNum: 1, pageSize: 100,
-        bankId: questionSearchForm.bankId,
-        questionType: questionSearchForm.questionType
-      }
-    })
-    questionList.value = res.data.records
-  } catch {
-  }
-}
-
-const handleSelectionChange = (selection: any[]) => {
-  selectedQuestions.value = selection
 }
 
 const handleAdd = () => {
@@ -272,37 +201,21 @@ const handleViewQuestions = async (row: any) => {
   questionDialogVisible.value = true
 }
 
-const showAddQuestionDialog = async () => {
+const showAddQuestionDialog = () => {
   questionForm.paperId = currentPaperId.value
-  questionForm.questionOrder = paperQuestions.value.length + 1
+  questionForm.questionId = null
+  questionForm.questionOrder = 1
   questionForm.questionScore = 5
-  selectedQuestions.value = []
-  await loadBanks()
-  await loadQuestions()
   addQuestionDialogVisible.value = true
 }
 
 const handleAddQuestion = async () => {
-  if (selectedQuestions.value.length === 0) {
-    ElMessage.warning('请选择要添加的题目')
-    return
-  }
-  addQuestionLoading.value = true
   try {
-    for (const question of selectedQuestions.value) {
-      await request.post(`/examPaper/${currentPaperId.value}/addQuestion`, {
-        paperId: currentPaperId.value,
-        questionId: question.id,
-        questionOrder: questionForm.questionOrder++,
-        questionScore: questionForm.questionScore
-      })
-    }
+    await request.post(`/examPaper/${currentPaperId.value}/addQuestion`, questionForm)
     ElMessage.success('添加成功')
     addQuestionDialogVisible.value = false
     handleViewQuestions({ id: currentPaperId.value })
   } catch {
-  } finally {
-    addQuestionLoading.value = false
   }
 }
 

@@ -7,10 +7,10 @@
           <el-button type="primary" @click="handleAdd">发布考试</el-button>
         </div>
       </template>
-      <el-table :data="tableData" border style="width: 100%;">
+      <el-table :data="tableData" border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="examName" label="考试名称" min-width="150" />
-        <el-table-column prop="paperName" label="试卷名称" min-width="150" />
+        <el-table-column prop="examName" label="考试名称" />
+        <el-table-column prop="paperId" label="试卷ID" width="100" />
         <el-table-column prop="startTime" label="开始时间" width="180">
           <template #default="{ row }">
             {{ formatDateTime(row.startTime) }}
@@ -28,7 +28,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" link @click="handleDelete(row)">删除</el-button>
@@ -50,28 +50,28 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑考试' : '发布考试'" width="500px">
       <el-form :model="form" label-width="100px">
         <el-form-item label="考试名称">
-          <el-input v-model="form.examName" placeholder="请输入考试名称" />
+          <el-input v-model="form.examName" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="试卷">
-          <el-select v-model="form.paperId" placeholder="请选择试卷" style="width: 100%;">
+          <el-select v-model="form.paperId" placeholder="请选择试卷">
             <el-option v-for="item in paperList" :key="item.id" :label="item.paperName" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间">
-          <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择时间" style="width: 100%;" />
+          <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择时间" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择时间" style="width: 100%;" />
+          <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择时间" />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="form.status" style="width: 100%;">
+          <el-select v-model="form.status">
             <el-option label="未开始" :value="0" />
             <el-option label="进行中" :value="1" />
             <el-option label="已结束" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入考试描述" />
+          <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import { formatDateTime } from '@/utils/format'
@@ -107,14 +107,6 @@ const form = reactive({
   description: ''
 })
 
-const paperMap = computed(() => {
-  const map = new Map()
-  paperList.value.forEach(paper => {
-    map.set(paper.id, paper.paperName)
-  })
-  return map
-})
-
 const loadPapers = async () => {
   try {
     const res: any = await request.get('/examPaper/page', { params: { pageNum: 1, pageSize: 100 } })
@@ -128,10 +120,7 @@ const loadData = async () => {
     const res: any = await request.get('/exam/page', {
       params: { pageNum: pageNum.value, pageSize: pageSize.value }
     })
-    tableData.value = res.data.records.map((item: any) => ({
-      ...item,
-      paperName: paperMap.value.get(item.paperId) || ''
-    }))
+    tableData.value = res.data.records
     total.value = res.data.total
   } catch {
   }
@@ -192,8 +181,8 @@ const handleDelete = async (row: any) => {
   }
 }
 
-onMounted(async () => {
-  await loadPapers()
+onMounted(() => {
+  loadPapers()
   loadData()
 })
 </script>
