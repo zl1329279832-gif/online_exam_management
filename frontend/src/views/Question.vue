@@ -33,6 +33,13 @@
             {{ { 1: '单选', 2: '多选', 3: '判断', 4: '填空', 5: '简答' }[row.questionType] }}
           </template>
         </el-table-column>
+        <el-table-column prop="difficulty" label="难度" width="80">
+          <template #default="{ row }">
+            <el-tag :type="row.difficulty === 1 ? 'success' : row.difficulty === 2 ? 'warning' : 'danger'">
+              {{ { 1: '简单', 2: '中等', 3: '困难' }[row.difficulty] }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="questionContent" label="题目内容" show-overflow-tooltip />
         <el-table-column prop="score" label="分值" width="80" />
         <el-table-column prop="createTime" label="创建时间" width="180" />
@@ -69,11 +76,26 @@
             <el-option label="简答题" :value="5" />
           </el-select>
         </el-form-item>
+        <el-form-item label="难度">
+          <el-select v-model="form.difficulty" placeholder="请选难度">
+            <el-option label="简单" :value="1" />
+            <el-option label="中等" :value="2" />
+            <el-option label="困难" :value="3" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="题目内容">
           <el-input v-model="form.questionContent" type="textarea" :rows="3" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="选项" v-if="form.questionType === 1 || form.questionType === 2">
-          <el-input v-model="form.options" type="textarea" :rows="3" placeholder="JSON数组格式，如：[\"A选项\", \"B选项\"]" />
+          <el-input
+            v-model="form.options"
+            type="textarea"
+            :rows="4"
+            placeholder="JSON数组格式，如：[\"A选项\", \"B选项\"]"
+          />
+          <div style="font-size: 12px; color: #909399; margin-top: 5px;">
+            提示：请使用标准JSON数组格式，例如 ["选项1", "选项2", "选项3"]
+          </div>
         </el-form-item>
         <el-form-item label="正确答案">
           <el-input v-model="form.answer" placeholder="请输入答案" />
@@ -170,12 +192,12 @@ const handleEdit = (row: any) => {
     id: row.id,
     bankId: row.bankId,
     questionType: row.questionType,
-    difficulty: row.difficulty,
+    difficulty: row.difficulty || 1,
     questionContent: row.questionContent,
-    options: row.options,
+    options: row.options || '',
     answer: row.answer,
-    analysis: row.analysis,
-    score: row.score
+    analysis: row.analysis || '',
+    score: row.score || 5
   })
   dialogVisible.value = true
 }
@@ -185,6 +207,17 @@ const handleSave = async () => {
     ElMessage.warning('请填写必要信息')
     return
   }
+  
+  // 验证选项JSON格式
+  if ((form.questionType === 1 || form.questionType === 2) && form.options) {
+    try {
+      JSON.parse(form.options)
+    } catch {
+      ElMessage.warning('选项格式不正确，请使用标准JSON数组格式')
+      return
+    }
+  }
+  
   saveLoading.value = true
   try {
     if (isEdit.value) {
