@@ -15,26 +15,28 @@
           <el-icon><House /></el-icon>
           <span>首页</span>
         </el-menu-item>
-        <el-menu-item index="/questionBank">
-          <el-icon><Collection /></el-icon>
-          <span>题库管理</span>
-        </el-menu-item>
-        <el-menu-item index="/question">
-          <el-icon><Document /></el-icon>
-          <span>题目管理</span>
-        </el-menu-item>
-        <el-menu-item index="/examPaper">
-          <el-icon><Notebook /></el-icon>
-          <span>试卷管理</span>
-        </el-menu-item>
-        <el-menu-item index="/exam">
-          <el-icon><Calendar /></el-icon>
-          <span>考试发布</span>
-        </el-menu-item>
-        <el-menu-item index="/examRecord">
-          <el-icon><List /></el-icon>
-          <span>考试记录</span>
-        </el-menu-item>
+        <template v-if="hasAnyRole(['ADMIN', 'TEACHER'])">
+          <el-menu-item index="/questionBank">
+            <el-icon><Collection /></el-icon>
+            <span>题库管理</span>
+          </el-menu-item>
+          <el-menu-item index="/question">
+            <el-icon><Document /></el-icon>
+            <span>题目管理</span>
+          </el-menu-item>
+          <el-menu-item index="/examPaper">
+            <el-icon><Notebook /></el-icon>
+            <span>试卷管理</span>
+          </el-menu-item>
+          <el-menu-item index="/exam">
+            <el-icon><Calendar /></el-icon>
+            <span>考试发布</span>
+          </el-menu-item>
+          <el-menu-item index="/examRecord">
+            <el-icon><List /></el-icon>
+            <span>考试记录</span>
+          </el-menu-item>
+        </template>
         <el-menu-item index="/myExam">
           <el-icon><Edit /></el-icon>
           <span>我的考试</span>
@@ -59,10 +61,16 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
+import { computed } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+
+const hasAnyRole = (roles: string[]) => {
+  const userRoles = userStore.userInfo?.roles || []
+  return roles.some(role => userRoles.includes(role))
+}
 
 const handleLogout = async () => {
   try {

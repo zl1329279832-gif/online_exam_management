@@ -6,6 +6,7 @@ import com.exam.common.Result;
 import com.exam.dto.ExamSubmitDTO;
 import com.exam.entity.ExamRecord;
 import com.exam.service.ExamRecordService;
+import com.exam.vo.ExamRecordVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +18,12 @@ public class ExamRecordController {
     private ExamRecordService examRecordService;
 
     @GetMapping("/page")
-    public Result<Page<ExamRecord>> page(
+    public Result<Page<ExamRecordVO>> page(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Long examId) {
-        return Result.success(examRecordService.page(pageNum, pageSize, examId));
+            @RequestParam(required = false) Long examId,
+            @RequestParam(required = false) Long userId) {
+        return Result.success(examRecordService.page(pageNum, pageSize, examId, userId));
     }
 
     @GetMapping("/my")

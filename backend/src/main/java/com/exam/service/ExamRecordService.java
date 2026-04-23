@@ -8,6 +8,8 @@ import com.exam.context.UserContext;
 import com.exam.entity.*;
 import com.exam.exception.BusinessException;
 import com.exam.mapper.*;
+import com.exam.vo.ExamRecordVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ExamRecordService {
@@ -32,14 +36,52 @@ public class ExamRecordService {
     @Autowired
     private QuestionMapper questionMapper;
 
-    public Page<ExamRecord> page(Integer pageNum, Integer pageSize, Long examId) {
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
+    public Page<ExamRecordVO> page(Integer pageNum, Integer pageSize, Long examId, Long userId) {
         Page<ExamRecord> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         if (examId != null) {
             wrapper.eq(ExamRecord::getExamId, examId);
         }
+        if (userId != null) {
+            wrapper.eq(ExamRecord::getUserId, userId);
+        }
         wrapper.orderByDesc(ExamRecord::getCreateTime);
-        return examRecordMapper.selectPage(page, wrapper);
+        Page<ExamRecord> recordPage = examRecordMapper.selectPage(page, wrapper);
+
+        // 转换为VO
+        Page<ExamRecordVO> voPage = new Page<>(recordPage.getCurrent(), recordPage.getSize(), recordPage.getTotal());
+        if (recordPage.getRecords().isEmpty()) {
+            return voPage;
+        }
+
+        // 获取关联的考试和用户数据
+        Set<Long> examIds = recordPage.getRecords().stream().map(ExamRecord::getExamId).collect(Collectors.toSet());
+        Set<Long> userIds = recordPage.getRecords().stream().map(ExamRecord::getUserId).collect(Collectors.toSet());
+
+        Map<Long, Exam> examMap = examMapper.selectBatchIds(examIds).stream()
+                .collect(Collectors.toMap(Exam::getId, e -> e));
+        Map<Long, SysUser> userMap = sysUserMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
+
+        List<ExamRecordVO> voList = recordPage.getRecords().stream().map(record -> {
+            ExamRecordVO vo = new ExamRecordVO();
+            BeanUtils.copyProperties(record, vo);
+            Exam exam = examMap.get(record.getExamId());
+            if (exam != null) {
+                vo.setExamName(exam.getExamName());
+            }
+            SysUser user = userMap.get(record.getUserId());
+            if (user != null) {
+                vo.setUserName(user.getRealName() != null ? user.getRealName() : user.getUsername());
+            }
+            return vo;
+        }).collect(Collectors.toList());
+
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     public Page<ExamRecord> myRecords(Integer pageNum, Integer pageSize) {

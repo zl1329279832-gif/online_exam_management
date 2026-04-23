@@ -24,9 +24,10 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadData">搜索</el-button>
+          <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="tableData" border style="width: 100%">
+      <el-table :data="tableData" border style="width: 100%;">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="questionType" label="类型" width="100">
           <template #default="{ row }">
@@ -40,9 +41,13 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="questionContent" label="题目内容" show-overflow-tooltip />
+        <el-table-column prop="questionContent" label="题目内容" min-width="200" show-overflow-tooltip />
         <el-table-column prop="score" label="分值" width="80" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
+        <el-table-column prop="createTime" label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createTime) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleEdit(row)">编辑</el-button>
@@ -54,8 +59,10 @@
         v-model:current-page="pageNum"
         v-model:page-size="pageSize"
         :total="total"
-        layout="total, prev, pager, next"
+        layout="total, sizes, prev, pager, next, jumper"
+        :page-sizes="[10, 20, 50, 100]"
         @current-change="loadData"
+        @size-change="loadData"
         style="margin-top: 20px; justify-content: flex-end"
       />
     </el-card>
@@ -63,12 +70,12 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑题目' : '新增题目'" width="600px">
       <el-form :model="form" label-width="100px">
         <el-form-item label="所属题库">
-          <el-select v-model="form.bankId" placeholder="请选择题库">
+          <el-select v-model="form.bankId" placeholder="请选择题库" style="width: 100%;">
             <el-option v-for="item in bankList" :key="item.id" :label="item.bankName" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="题目类型">
-          <el-select v-model="form.questionType" placeholder="请选类型">
+          <el-select v-model="form.questionType" placeholder="请选类型" style="width: 100%;">
             <el-option label="单选题" :value="1" />
             <el-option label="多选题" :value="2" />
             <el-option label="判断题" :value="3" />
@@ -77,7 +84,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="难度">
-          <el-select v-model="form.difficulty" placeholder="请选难度">
+          <el-select v-model="form.difficulty" placeholder="请选难度" style="width: 100%;">
             <el-option label="简单" :value="1" />
             <el-option label="中等" :value="2" />
             <el-option label="困难" :value="3" />
@@ -91,7 +98,7 @@
             v-model="form.options"
             type="textarea"
             :rows="4"
-            placeholder='JSON数组格式，如：["A选项", "B选项"]'
+            placeholder="JSON数组格式，如：[\"A选项\", \"B选项\"]"
           />
           <div style="font-size: 12px; color: #909399; margin-top: 5px;">
             提示：请使用标准JSON数组格式，例如 ["选项1", "选项2", "选项3"]
@@ -101,7 +108,7 @@
           <el-input v-model="form.answer" placeholder="请输入答案" />
         </el-form-item>
         <el-form-item label="分值">
-          <el-input-number v-model="form.score" :min="0" :step="1" />
+          <el-input-number v-model="form.score" :min="0" :step="1" style="width: 100%;" />
         </el-form-item>
         <el-form-item label="解析">
           <el-input v-model="form.analysis" type="textarea" :rows="2" />
@@ -119,6 +126,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { formatDateTime } from '@/utils/format'
 
 const tableData = ref<any[]>([])
 const bankList = ref<any[]>([])
@@ -168,6 +176,13 @@ const loadData = async () => {
     total.value = res.data.total
   } catch {
   }
+}
+
+const handleReset = () => {
+  searchForm.bankId = null
+  searchForm.questionType = null
+  pageNum.value = 1
+  loadData()
 }
 
 const handleAdd = () => {

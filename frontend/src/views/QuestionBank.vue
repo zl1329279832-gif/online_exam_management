@@ -13,14 +13,19 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadData">搜索</el-button>
+          <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="tableData" border>
+      <el-table :data="tableData" border style="width: 100%;">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="bankName" label="题库名称" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="bankName" label="题库名称" min-width="150" />
+        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" link @click="handleDelete(row)">删除</el-button>
@@ -31,8 +36,10 @@
         v-model:current-page="pageNum"
         v-model:page-size="pageSize"
         :total="total"
-        layout="total, prev, pager, next"
+        layout="total, sizes, prev, pager, next, jumper"
+        :page-sizes="[10, 20, 50, 100]"
         @current-change="loadData"
+        @size-change="loadData"
         style="margin-top: 20px; justify-content: flex-end"
       />
     </el-card>
@@ -58,6 +65,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { formatDateTime } from '@/utils/format'
 
 const tableData = ref<any[]>([])
 const pageNum = ref(1)
@@ -90,6 +98,12 @@ const loadData = async () => {
     total.value = res.data.total
   } catch {
   }
+}
+
+const handleReset = () => {
+  searchForm.keyword = ''
+  pageNum.value = 1
+  loadData()
 }
 
 const handleAdd = () => {

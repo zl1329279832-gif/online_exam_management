@@ -8,11 +8,19 @@
       </template>
       <el-tabs v-model="activeTab">
         <el-tab-pane label="可参加的考试" name="available">
-          <el-table :data="examList" border>
+          <el-table :data="examList" border style="width: 100%;">
             <el-table-column prop="id" label="考试ID" width="100" />
-            <el-table-column prop="examName" label="考试名称" />
-            <el-table-column prop="startTime" label="开始时间" width="180" />
-            <el-table-column prop="endTime" label="结束时间" width="180" />
+            <el-table-column prop="examName" label="考试名称" min-width="150" />
+            <el-table-column prop="startTime" label="开始时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.startTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="endTime" label="结束时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.endTime) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
                 <el-tag :type="{ 0: 'info', 1: 'success', 2: 'warning', 3: 'danger' }[row.status]">
@@ -20,7 +28,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150">
+            <el-table-column label="操作" width="150" fixed="right">
               <template #default="{ row }">
                 <el-button type="primary" size="small" @click="handleStartExam(row)">参加考试</el-button>
               </template>
@@ -28,11 +36,19 @@
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="我的成绩" name="scores">
-          <el-table :data="recordList" border>
+          <el-table :data="recordList" border style="width: 100%;">
             <el-table-column prop="id" label="记录ID" width="100" />
             <el-table-column prop="examId" label="考试ID" width="100" />
-            <el-table-column prop="startTime" label="开始时间" width="180" />
-            <el-table-column prop="submitTime" label="提交时间" width="180" />
+            <el-table-column prop="startTime" label="开始时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.startTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="submitTime" label="提交时间" width="180">
+              <template #default="{ row }">
+                {{ formatDateTime(row.submitTime) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="score" label="得分" width="100">
               <template #default="{ row }">
                 <span :style="{ color: row.score >= 60 ? '#67C23A' : '#F56C6C' }">{{ row.score }}</span>
@@ -50,8 +66,10 @@
             v-model:current-page="pageNum"
             v-model:page-size="pageSize"
             :total="total"
-            layout="total, prev, pager, next"
+            layout="total, sizes, prev, pager, next, jumper"
+            :page-sizes="[10, 20, 50, 100]"
             @current-change="loadRecords"
+            @size-change="loadRecords"
             style="margin-top: 20px; justify-content: flex-end"
           />
         </el-tab-pane>
@@ -65,6 +83,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
+import { formatDateTime } from '@/utils/format'
 
 const router = useRouter()
 const activeTab = ref('available')
