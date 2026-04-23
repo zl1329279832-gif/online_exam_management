@@ -1,7 +1,9 @@
 package com.exam.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.exam.common.Result;
+import com.exam.dto.ExamSubmitDTO;
 import com.exam.entity.ExamRecord;
 import com.exam.service.ExamRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +42,9 @@ public class ExamRecordController {
     }
 
     @PostMapping("/submit/{recordId}")
-    public Result<Void> submitExam(@PathVariable Long recordId, @RequestBody String answers) {
-        examRecordService.submitExam(recordId, answers);
+    public Result<Void> submitExam(@PathVariable Long recordId, @RequestBody ExamSubmitDTO examSubmitDTO) {
+        String answersJson = JSONUtil.toJsonStr(examSubmitDTO.getAnswers());
+        examRecordService.submitExam(recordId, answersJson);
         return Result.success();
     }
 }

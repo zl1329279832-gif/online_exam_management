@@ -67,7 +67,7 @@ public class ExamPaperService {
     }
 
     @Transactional
-    public void addQuestion(Long paperId, List<ExamPaperQuestion> question) {
+    public void addQuestion(Long paperId, ExamPaperQuestion question) {
         question.setPaperId(paperId);
         examPaperQuestionMapper.insert(question);
     }

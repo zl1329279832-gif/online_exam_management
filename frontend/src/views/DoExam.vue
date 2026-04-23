@@ -111,38 +111,38 @@ const loadData = async () => {
 }
 
 const handleSubmit = async () => {
-  try {
-    await ElMessageBox.confirm('确定要提交试卷吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
+        try {
+            await ElMessageBox.confirm('确定要提交试卷吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
 
-    submitLoading.value = true
+            submitLoading.value = true
 
-    const finalAnswers: Record<string, string> = {}
-    questions.value.forEach(q => {
-      if (q.questionType === 2) {
-        finalAnswers[q.id] = answerList[q.id].sort().join(',')
-      } else {
-        finalAnswers[q.id] = answers[q.id] || ''
-      }
-    })
+            const finalAnswers: Record<string, string> = {}
+            questions.value.forEach(q => {
+                if (q.questionType === 2) {
+                    finalAnswers[q.id] = answerList[q.id] ? answerList[q.id].sort().join(',') : ''
+                } else {
+                    finalAnswers[q.id] = answers[q.id] || ''
+                }
+            })
 
-    await request.post(`/examRecord/submit/${recordId}`, finalAnswers, {
-      headers: { 'Content-Type': 'application/json' }
-    })
+            await request.post(`/examRecord/submit/${recordId}`, {
+                answers: finalAnswers
+            })
 
-    ElMessage.success('提交成功')
-    router.push('/myExam')
-  } catch (e) {
-    if (e !== 'cancel') {
-      console.error(e)
+            ElMessage.success('提交成功')
+            router.push('/myExam')
+        } catch (e) {
+            if (e !== 'cancel') {
+                console.error(e)
+            }
+        } finally {
+            submitLoading.value = false
+        }
     }
-  } finally {
-    submitLoading.value = false
-  }
-}
 
 onMounted(() => {
   loadData()
